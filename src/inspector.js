@@ -51,3 +51,6 @@ function LoadResource(e, t) {
 }
 var inspector = new MBInspector;
 inspector.frame("#");
+function MBInspectorToggle() {
+    alert(1);
+}

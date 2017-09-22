@@ -19,6 +19,7 @@ var MBInspectorInitiator = (function () {
                 chrome.tabs.executeScript(tab.id, { file: 'js/jquery/jquery-3.2.1.min.js' });
                 chrome.tabs.executeScript(tab.id, { file: 'src/inspector.js' });
                 chrome.tabs.insertCSS(tab.id, { file: 'src/background.css' });
+                alert(2);
                 window.setTimeout(function () {
                     if (typeof callback == "function") {
                         callback();
@@ -29,12 +30,12 @@ var MBInspectorInitiator = (function () {
     };
     MBInspectorInitiator.prototype.toggle = function (tab) {
         this.init(tab, function () {
-            chrome.tabs.executeScript(tab.id, { code: 'MBInspectToggle()' });
+            chrome.tabs.executeScript(tab.id, { code: 'MBInspectorToggle()' });
         });
     };
     MBInspectorInitiator.prototype.inspectThisElement = function (info, tab) {
         this.init(tab, function () {
-            chrome.tabs.executeScript(tab.id, { code: 'CFInspectThisElement()' });
+            chrome.tabs.executeScript(tab.id, { code: 'MBInspectThisElement()' });
         });
     };
     return MBInspectorInitiator;

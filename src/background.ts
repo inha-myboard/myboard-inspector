@@ -22,7 +22,7 @@ class MBInspectorInitiator {
                 chrome.tabs.executeScript(tab.id, {file: 'js/jquery/jquery-3.2.1.min.js'});
                 chrome.tabs.executeScript(tab.id, {file: 'src/inspector.js'});
                 chrome.tabs.insertCSS(tab.id, {file: 'src/background.css'});
-
+alert(2);
                 window.setTimeout(function () {
                     if (typeof callback == "function") {
                         callback();
@@ -33,8 +33,8 @@ class MBInspectorInitiator {
     }
 
     toggle(tab) {
-       this. init(tab, function () {
-            chrome.tabs.executeScript(tab.id, {code: 'MBInspectToggle()'});
+        this.init(tab, function () {
+            chrome.tabs.executeScript(tab.id, {code: 'MBInspectorToggle()'});
         });
     }
 
