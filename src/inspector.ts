@@ -16,54 +16,77 @@ let $ = window["jQuery"];
 let chrome = window["chrome"];
 
 class MBInspector {
-	inspectorFrame: MBInspectorFrame;
-	
-	init() {
-		if($("#mbInspector").size() == 0) {
-			let inspectorDiv = $("<div id='mbInspector'><iframe id='mbInspectorFrame'></iframe></div>");
-			this.inspectorFrame = new MBInspectorFrame(inspectorDiv.find("iframe"));
-			this.inspectorFrame.init();
-		}
-	}
+	inspector: any;
+	inspectorFrame: any;
+	targetSelector: string = "div,li,tr";
 
-	frame(selector) {
-		return this.inspectorFrame.find(selector);
-	}
-}
-
-class MBInspectorFrame {
-	frame: any;
-
-	constructor(frame) {
-		this.frame = frame;
+	isInit() {
+		return $("#mbInspector").size() > 0;
 	}
 
 	init() {
-		if($("#mbInspectorFrame").size() == 0) {
-			$(window.document).append(this.frame);
-			LoadResource("inspector.html", function(html){
-				this.frame.find("body").html(html);
-			});
+		this.inspector = $("<div id='mbInspector'><iframe id='mbInspectorFrame'><body></body></iframe></div>");
+		$(window.document.body).append(this.inspector);
+		this.inspectorFrame = this.inspector.find("iframe");
+		LoadResource("src/inspectorFrame.html", (html)=>{
+			this.inspectorFrame.contents().find("body").html(html);
+			this.enable();
+		});
+
+		// this.inspectorFrame.contents().on("click", "span", (e)=>{alert(e);}); 
+	}
+
+	isEnable() {
+		return this.inspector.is(":visible");
+	}
+
+	toggle() {
+		if(!this.isInit()) {
+			this.init();
+			return;
+		}
+		if(this.isEnable()) {
+			this.disable();
+		} else {
+			this.enable();
 		}
 	}
 
-	find(selector) {
-		return this.frame.find(selector);
+	disable() {
+		$("body").off("click", this.targetSelector, this.onClickTarget);
+		this.inspector.hide();
+	}
+
+	onClickTarget(event) {
+		console.log(arguments);
+		event.preventDefault();
+		event.stopImmediatePropagation();
+	}
+
+	enable() {
+		$("body").on("click", this.targetSelector, this.onClickTarget);
+		this.inspector.show();
 	}
 }
 
 function LoadResource(e, t) {
     var r = new XMLHttpRequest;
-    r.open("GET", chrome.extension.getURL(e), !0), r.onreadystatechange = function() {
+    r.open("GET", chrome.runtime.getURL(e), !0), r.onreadystatechange = function() {
         r.readyState == XMLHttpRequest.DONE && 200 == r.status && t(r.responseText)
     }, r.send();
 }
 
-
 let inspector = new MBInspector;
-
-inspector.frame("#");
+function $frame(selector) {
+	return inspector.inspectorFrame.find(selector);
+}
 
 function MBInspectorToggle() {
-	alert(1);
+	inspector.toggle();
 }
+
+chrome.runtime.onMessage.addListener(
+	function(request, sender, sendResponse) {
+	  if (request.message == "ping")
+	    sendResponse({message: "pong"});
+	});

@@ -20,7 +20,11 @@
   },
   "permissions": [
     "tabs",
+    "activeTab",
     "contextMenus",
     "http://*/*,https://*/*"
+  ],
+  "web_accessible_resources": [
+    "src/inspectorFrame.html"
   ]
 }

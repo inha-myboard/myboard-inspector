@@ -11,24 +11,25 @@ class MBInspectorInitiator {
             return;
         }
 
-        chrome.tabs.sendMessage(tab.id, {message: "ping"}, function (response) {
-            if (response) {
-                //already loaded
-                if (typeof callback == "function") {
-                    callback();
-                }
-            } else {
-                // Load iniial scripts, css 
-                chrome.tabs.executeScript(tab.id, {file: 'js/jquery/jquery-3.2.1.min.js'});
-                chrome.tabs.executeScript(tab.id, {file: 'src/inspector.js'});
-                chrome.tabs.insertCSS(tab.id, {file: 'src/background.css'});
-alert(2);
-                window.setTimeout(function () {
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+            chrome.tabs.sendMessage(tabs[0].id, {message: "ping"}, function (response) {
+                if (response) {
                     if (typeof callback == "function") {
                         callback();
                     }
-                }, 1000);
-            }
+                } else {
+                    // Load iniial scripts, css 
+                    chrome.tabs.executeScript(tabs[0].id, {file: 'js/jquery/jquery.min.js'});
+                    chrome.tabs.executeScript(tabs[0].id, {file: 'src/inspector.js'});
+                    chrome.tabs.insertCSS(tabs[0].id, {file: 'src/inspector.css'});
+
+                    window.setTimeout(function () {
+                        if (typeof callback == "function") {
+                            callback();
+                        }
+                    }, 1000);
+                }
+            });
         });
     }
 
