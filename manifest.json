@@ -25,6 +25,7 @@
     "http://*/*,https://*/*"
   ],
   "web_accessible_resources": [
-    "src/inspectorFrame.html"
+    "src/inspectorFrame.html",
+    "css/bootstrap.min.css"
   ]
 }

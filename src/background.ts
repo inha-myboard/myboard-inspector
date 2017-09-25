@@ -20,6 +20,9 @@ class MBInspectorInitiator {
                 } else {
                     // Load iniial scripts, css 
                     chrome.tabs.executeScript(tabs[0].id, {file: 'js/jquery/jquery.min.js'});
+                    chrome.tabs.executeScript(tabs[0].id, {file: 'js/handlebars.min.js'});
+                    chrome.tabs.executeScript(tabs[0].id, {file: 'js/bootstraps.min.js'});
+                    chrome.tabs.executeScript(tabs[0].id, {file: 'js/extends.js'});
                     chrome.tabs.executeScript(tabs[0].id, {file: 'src/inspector.js'});
                     chrome.tabs.insertCSS(tabs[0].id, {file: 'src/inspector.css'});
 

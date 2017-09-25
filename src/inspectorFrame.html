@@ -1,14 +1,64 @@
 <!doctype html>
 <html>
     <head>
-    	<style>
-    		body {
-    			background-color: white;
-    		}
-    	</style>
+        <style>
+            body {
+    	background-color: white;
+            }
+            .el-name {
+                display: inline-block;
+                width: 80px;
+            }
+            .el-value {
+                display: inline-block;
+            }
+            .el-segment {
+                border: 1px solid gray;
+                border-radius: 6px;
+                margin-top: 8px;
+            }
+        </style>
     </head>
     <body>
-    	<div id="title"></div>
-    	<span id='lab'>Hello</span>
+        <div class="panel panel-default">
+            <div class="panel-heading">Inspector</div>
+            <div class="panel-body">
+                <div class="panel-group">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Selector</div>
+                        <div class="panel-body"><span id="selector"></span></div>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Content</div>
+                        <div id="contents" class="panel-body"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <script type="text/x-handlebars" id="mbTplText">
+            <div class="el-segment" title="{{selector}}">
+                <span class="el-name">텍스트</span>
+                <span class="el-value">{{text}}</span>
+            </div>
+        </script>
+        <script type="text/x-handlebars" id="mbTplLink">
+            <div class="el-segment" title="{{selector}}">
+                {{#if href}}
+                <span class="el-name">텍스트</span>
+                <span class="el-value">{{text}}</span>
+                <br/>
+                {{/if}}
+
+                <span class="el-name">링크</span>
+                <span class="el-value">{{href}}</span>
+            </div>
+        </script>
+        <script type="text/x-handlebars" id="mbTplImg">
+            <div class="el-segment" title="{{selector}}">
+                <span class="el-name">이미지</span>
+                <img class="el-value"><img src="{{src}}" width="80"/></span>
+            </div>
+        </script>
     </body>
 </html>
