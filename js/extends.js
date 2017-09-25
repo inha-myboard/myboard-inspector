@@ -1,7 +1,7 @@
 jQuery.fn.extend({
-    getPath: function() {
+    getPath: function(root) {
         var pathes = [];
-
+        if(root === this) return root[0].tagName;
         this.each(function(index, element) {
             var path, $node = jQuery(element);
 
@@ -24,6 +24,10 @@ jQuery.fn.extend({
 
                 path = name + (path ? ' > ' + path : '');
                 $node = parent;
+
+                if(root != undefined && $node[0] === $(root)[0]) {
+                    break;
+                }
             }
 
             pathes.push(path);

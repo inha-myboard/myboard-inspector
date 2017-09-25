@@ -82,10 +82,26 @@ class MBInspector {
 		this.inspectElements(this.inspectedElement.parentElement);
 	}
 
+	onClickPathCrumb(e) {
+		let paths = $(e.currentTarget).data("paths");
+		this.inspectElements($(paths));
+		return false;
+	}
+
 	inspectElements(element) {
-		let selector = element.getPath();
+		let selector = element.getPath(document.body);
 		this.inspectedElement = element;
-		$frame("#selector").text(selector);
+		let paths = "";
+		let pathNav = $("<div class='path-nav'></div>");
+		$(selector.split(">")).each((i, path) =>{
+			paths += (i > 0 ? "> ": "") + path;
+			if(i > 0)
+				$("<span></span>").text(">").appendTo(pathNav);
+			$("<a href='#' class='path-crumbs'></a>").text(path).data("paths", paths).appendTo(pathNav);
+
+
+		});
+		$frame("#selector").html(pathNav);
 		console.log(selector);
 		let segments = this.findSegments(element);
 		let segmentHtmls = [];
@@ -134,7 +150,7 @@ class MBInspector {
 			}
 
 			segment["text"] = $(e).text();
-			segment["selector"] = $(e).getPath();
+			segment["selector"] = $(e).getPath(element);
 
 			return segment;
 		});
@@ -152,6 +168,7 @@ class MBInspector {
 
 	bindEvents() {
 		$("body").on("click", this.targetSelector, $.proxy(this.onClickTarget, this));
+		$frame("body").on("click", ".path-crumbs", $.proxy(this.onClickPathCrumb, this));
 	}
 
 	unbindEvents() {

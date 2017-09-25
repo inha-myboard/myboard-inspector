@@ -68,11 +68,24 @@ var MBInspector = (function () {
         if (this.inspectedElement.parentElement.tagName == "HTML")
             this.inspectElements(this.inspectedElement.parentElement);
     };
+    MBInspector.prototype.onClickPathCrumb = function (e) {
+        var paths = $(e.currentTarget).data("paths");
+        this.inspectElements($(paths));
+        return false;
+    };
     MBInspector.prototype.inspectElements = function (element) {
         var _this = this;
-        var selector = element.getPath();
+        var selector = element.getPath(document.body);
         this.inspectedElement = element;
-        $frame("#selector").text(selector);
+        var paths = "";
+        var pathNav = $("<div class='path-nav'></div>");
+        $(selector.split(">")).each(function (i, path) {
+            paths += (i > 0 ? "> " : "") + path;
+            if (i > 0)
+                $("<span></span>").text(">").appendTo(pathNav);
+            $("<a href='#' class='path-crumbs'></a>").text(path).data("paths", paths).appendTo(pathNav);
+        });
+        $frame("#selector").html(pathNav);
         console.log(selector);
         var segments = this.findSegments(element);
         var segmentHtmls = [];
@@ -120,7 +133,7 @@ var MBInspector = (function () {
                 segment["type"] = "text";
             }
             segment["text"] = $(e).text();
-            segment["selector"] = $(e).getPath();
+            segment["selector"] = $(e).getPath(element);
             return segment;
         });
         console.log(segments);
@@ -133,6 +146,7 @@ var MBInspector = (function () {
     };
     MBInspector.prototype.bindEvents = function () {
         $("body").on("click", this.targetSelector, $.proxy(this.onClickTarget, this));
+        $frame("body").on("click", ".path-crumbs", $.proxy(this.onClickPathCrumb, this));
     };
     MBInspector.prototype.unbindEvents = function () {
         $("body").off("click", this.targetSelector, this.onClickTarget);
