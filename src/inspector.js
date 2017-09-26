@@ -14,6 +14,7 @@ var chrome = window["chrome"];
 var Handlebars = window["Handlebars"];
 var MBInspector = (function () {
     function MBInspector() {
+        // Element's selector that can be inspected.
         this.targetSelector = "div,li,tr";
     }
     MBInspector.prototype.isInit = function () {
@@ -22,7 +23,9 @@ var MBInspector = (function () {
     MBInspector.prototype.init = function () {
         var _this = this;
         this.inspector = $("<div id='mbInspector'><iframe id='mbInspectorFrame'><body></body></iframe></div>");
-        $(window.document.body).append(this.inspector);
+        this.inspectedCover = $("<div id='mbElementCover'></div>");
+        $(document.body).append(this.inspector);
+        $(document.body).append(this.inspectedCover);
         this.inspectorFrame = this.inspector.find("iframe");
         LoadResource("src/inspectorFrame.html", function (html) {
             _this.inspectorFrame.contents().find("body").html(html);
@@ -53,6 +56,7 @@ var MBInspector = (function () {
     MBInspector.prototype.disable = function () {
         this.unbindEvents();
         this.inspector.hide();
+        this.inspectedCover.hide();
     };
     MBInspector.prototype.onClickTarget = function (event) {
         console.log(arguments);
@@ -73,9 +77,17 @@ var MBInspector = (function () {
         this.inspectElements($(paths));
         return false;
     };
+    MBInspector.prototype.onMouseOverTarget = function (e) {
+        e.stopPropagation();
+        $(e.currentTarget).addClass("mb-inspector-over");
+    };
+    MBInspector.prototype.onMouseOutTarget = function (e) {
+        e.stopPropagation();
+        $(e.currentTarget).removeClass("mb-inspector-over");
+    };
     MBInspector.prototype.inspectElements = function (element) {
         var _this = this;
-        var selector = element.getPath(document.body);
+        var selector = element.getPath();
         this.inspectedElement = element;
         var paths = "";
         var pathNav = $("<div class='path-nav'></div>");
@@ -101,10 +113,11 @@ var MBInspector = (function () {
             }
         });
         $frame("#contents").html(segmentHtmls.join(""));
-        // if(element.tagName === "LI") {
-        // } else if(element.tagName === "DIV") {
-        // } else if(element.tagName === "TR") {
-        // }
+        this.inspectedCover.css("top", element.offset().top);
+        this.inspectedCover.css("left", element.offset().left);
+        this.inspectedCover.css("width", element[0].offsetWidth);
+        this.inspectedCover.css("height", element[0].offsetHeight);
+        this.inspectedCover.show();
     };
     MBInspector.prototype.findSegments = function (element) {
         var segments = null;
@@ -138,7 +151,6 @@ var MBInspector = (function () {
         });
         console.log(segments);
         return segments;
-        // segments는 text만을 가지고있거나, link거나, img 
     };
     MBInspector.prototype.enable = function () {
         this.bindEvents();
@@ -146,10 +158,15 @@ var MBInspector = (function () {
     };
     MBInspector.prototype.bindEvents = function () {
         $("body").on("click", this.targetSelector, $.proxy(this.onClickTarget, this));
+        $("body").on("mouseover", this.targetSelector, $.proxy(this.onMouseOverTarget, this));
+        $("body").on("mouseout", this.targetSelector, $.proxy(this.onMouseOutTarget, this));
         $frame("body").on("click", ".path-crumbs", $.proxy(this.onClickPathCrumb, this));
     };
     MBInspector.prototype.unbindEvents = function () {
         $("body").off("click", this.targetSelector, this.onClickTarget);
+        $("body").off("mouseover", this.targetSelector, this.onMouseOverTarget);
+        $("body").off("mouseout", this.targetSelector, this.onMouseOutTarget);
+        $frame("body").off("click", ".path-crumbs", this.onClickPathCrumb);
     };
     return MBInspector;
 }());

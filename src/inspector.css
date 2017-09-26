@@ -3,8 +3,9 @@
 	height: 500px;
 	position: fixed;
 	top: 0;
-	border: 1px solid blue;
 	border-radius: 6px;
+	-webkit-box-shadow: 0px 0px 40px 5px rgba(0,0,0,0.5);
+    	box-shadow: 0px 0px 40px 5px rgba(0,0,0,0.5);
 	z-index: 9999999;
 }
 
@@ -13,4 +14,17 @@
 	height: 100%;
 	border: none;
 	border-radius: 6px;
+}
+
+#mbElementCover {
+	pointer-events: none;
+	opacity: 0.3;
+	background-color: skyblue;
+	position: absolute;
+	z-index:9999998;
+	outline: 2px solid red !important;
+}
+
+.mb-inspector-over {
+	outline: 2px solid #00aeee !important;
 }

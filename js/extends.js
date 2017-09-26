@@ -54,6 +54,13 @@ jQuery.expr[':'].hasText = function(el, i) {
     return false;
 };
 
+String.prototype.omit = function (maxlength) {
+    if(this.length > maxlength) {
+        return this.substring(0, maxlength) + "...";
+    }
+    return this;
+}
+
 // for demo: http://jsbin.com/jeqesisa/7/edit
 // for detailed comments, see my SO answer here http://stackoverflow.com/questions/8853396/logical-operator-in-a-handlebars-js-if-conditional/21915381#21915381
 
@@ -70,6 +77,9 @@ jQuery.expr[':'].hasText = function(el, i) {
  {{/xif}}
  </p>
  */
+Handlebars.registerHelper("omit", function(text, maxlength) {
+    return text.omit(maxlength);
+});
 
 Handlebars.registerHelper("xif", function (expression, options) {
     return Handlebars.helpers["x"].apply(this, [expression, options]) ? options.fn(this) : options.inverse(this);

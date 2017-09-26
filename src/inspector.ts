@@ -17,10 +17,16 @@ let chrome = window["chrome"];
 let Handlebars = window["Handlebars"];
 
 class MBInspector {
+	// Inspector DIV
 	inspector: any;
+	// Inspector IFRAME
 	inspectorFrame: any;
+	// Element's selector that can be inspected.
 	targetSelector: string = "div,li,tr";
+	// Current inspected element
 	inspectedElement: any;
+	// Cover of inspected element
+	inspectedCover: any;
 
 	isInit() {
 		return $("#mbInspector").size() > 0;
@@ -28,7 +34,9 @@ class MBInspector {
 
 	init() {
 		this.inspector = $("<div id='mbInspector'><iframe id='mbInspectorFrame'><body></body></iframe></div>");
-		$(window.document.body).append(this.inspector);
+		this.inspectedCover = $("<div id='mbElementCover'></div>");
+		$(document.body).append(this.inspector);
+		$(document.body).append(this.inspectedCover);
 		this.inspectorFrame = this.inspector.find("iframe");
 		LoadResource("src/inspectorFrame.html", (html)=>{
 			this.inspectorFrame.contents().find("body").html(html);
@@ -62,6 +70,7 @@ class MBInspector {
 	disable() {
 		this.unbindEvents();
 		this.inspector.hide();
+		this.inspectedCover.hide();
 	}
 
 	onClickTarget(event) {
@@ -87,9 +96,19 @@ class MBInspector {
 		this.inspectElements($(paths));
 		return false;
 	}
+	
+	onMouseOverTarget(e) {
+		e.stopPropagation();
+		$(e.currentTarget).addClass("mb-inspector-over");
+	}
+
+	onMouseOutTarget(e) {
+		e.stopPropagation();
+		$(e.currentTarget).removeClass("mb-inspector-over");
+	}
 
 	inspectElements(element) {
-		let selector = element.getPath(document.body);
+		let selector = element.getPath();
 		this.inspectedElement = element;
 		let paths = "";
 		let pathNav = $("<div class='path-nav'></div>");
@@ -98,8 +117,6 @@ class MBInspector {
 			if(i > 0)
 				$("<span></span>").text(">").appendTo(pathNav);
 			$("<a href='#' class='path-crumbs'></a>").text(path).data("paths", paths).appendTo(pathNav);
-
-
 		});
 		$frame("#selector").html(pathNav);
 		console.log(selector);
@@ -115,13 +132,11 @@ class MBInspector {
 			}
 		});
 		$frame("#contents").html(segmentHtmls.join(""));
-		// if(element.tagName === "LI") {
-
-		// } else if(element.tagName === "DIV") {
-
-		// } else if(element.tagName === "TR") {
-
-		// }
+		this.inspectedCover.css("top", element.offset().top);
+		this.inspectedCover.css("left", element.offset().left);
+		this.inspectedCover.css("width", element[0].offsetWidth);
+		this.inspectedCover.css("height", element[0].offsetHeight);
+		this.inspectedCover.show();
 	}
 
 	findSegments(element) {
@@ -157,8 +172,6 @@ class MBInspector {
 
 		console.log(segments);
 		return segments;
-		// segments는 text만을 가지고있거나, link거나, img 
-
 	}
 
 	enable() {
@@ -168,11 +181,16 @@ class MBInspector {
 
 	bindEvents() {
 		$("body").on("click", this.targetSelector, $.proxy(this.onClickTarget, this));
+		$("body").on("mouseover", this.targetSelector, $.proxy(this.onMouseOverTarget, this));
+		$("body").on("mouseout", this.targetSelector, $.proxy(this.onMouseOutTarget, this));
 		$frame("body").on("click", ".path-crumbs", $.proxy(this.onClickPathCrumb, this));
 	}
 
 	unbindEvents() {
 		$("body").off("click", this.targetSelector, this.onClickTarget);
+		$("body").off("mouseover", this.targetSelector, this.onMouseOverTarget);
+		$("body").off("mouseout", this.targetSelector, this.onMouseOutTarget);
+		$frame("body").off("click", ".path-crumbs", this.onClickPathCrumb);
 	}
 }
 
