@@ -1,59 +1,130 @@
 <!doctype html>
 <html>
     <head>
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <!-- Compiled and minified CSS -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
+
         <style>
             html {
                 overflow: hidden;
                 height: 100%;
             }
             body {
-    	background-color: white;
-            }
-            .el-name {
-                display: inline-block;
-                width: 80px;
-            }
-            .el-value {
-                display: inline-block;
-            }
-            .el-segment {
-                border: 1px solid gray;
-                border-radius: 6px;
-                margin-top: 8px;
-                white-space: nowrap;
-                overflow: hidden;
+                background-color: white;
             }
 
+            #mbInspectorHeader {
+                cursor: pointer;
+            }
 
-            #mbInspectorPanel > div.panel-body {
-                width: 100%;
-                height: 100%;
+            .nav-wrapper > .switch {
+                margin-left: 10px;
+            }
+
+            .nav-wrapper > .switch > label {
+                color: white;
+            }
+
+            .wizard-wrapper {
+                position: absolute;
+                top: 56px;
+                bottom: 56px;
+                left: 0;
+                right: 0;
+                padding: 20px 10px;
                 overflow: auto;
             }
+
+            .wizard-step {
+                position: absolute;
+                bottom: 0;
+            }
+
+            .wizard-desc {
+                margin-left: 10px;
+            }
+
         </style>
+        <!-- Compiled and minified JavaScript -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
     </head>
     <body>
-        <div id="mbInspectorPanel" class="panel panel-primary">
-            <div class="panel-heading">Inspector</div>
-            <div class="panel-body">
-                <div class="panel-group">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">Body Selector</div>
-                        <div class="panel-body"><span id="selector"></span></div>
+        <div id="mbInspectorPanel">
+            <nav id="mbInspectorHeader">
+                <div class="nav-wrapper">
+                    <span class="brand-logo center">Inspector</span>
+                    <div class="switch left">
+                        <label>
+                            Static
+                        <input type="checkbox" id="inspectTypeCheck" name="inspectType">
+                        <span class="lever"></span>
+                            Ajax
+                        </label>
                     </div>
-                    <div class="panel panel-default">
-                        <div class="panel-heading">Content Select</div>
-                        <div id="contents" class="panel-body"></div>
+                    <ul class="right">
+                        <li><a id="closeButton" href="#"><i class="material-icons">close</i></a></li>
+                    </ul>
+                </div>
+            </nav>
+            <div class="wizard-wrapper">
+                <div class="static-wizard">
+                    <div>
+                        <h4>Static HTML Inspecting</h4>
+                            <div>
+                                <h5>Body Selector</h5>
+                                <span id="selector"></span>
+                                <input type="checkbox" id="selectSiblingCheck" checked/>
+                                <label for="selectSiblingCheck">형제노드 포함</label>
+                            </div>
+                            <div>
+                                <h5>Segments Selector</h5>
+                                <ul id="contents" class="collection"></ul>
+                            </div>  
+                        </div>
                     </div>
+                </div>
+                <div class="ajax-wizard">
+                </div>
+            </div>
+            <nav class="wizard-step">
+                <div class="nav-wrapper center">
+                    <span class="wizard-desc left"></span>
+                    <span class="step">1 of 3</span>
+                    <ul id="nav-mobile" class="right">
+                        <li><a id="nextButton" href="#">이전</a></li>
+                        <li><a id="prevButton" href="#">다음</a></li>
+                    </ul>
                 </div>
             </div>
         </div>
     
-        <script type="text/x-handlebars" id="mbTplText">
-            <div class="el-segment" title="{{selector}}">
-                <span class="el-name">텍스트</span>
-                <span class="el-value">{{text}}</span>
-            </div>
+        <script type="text/x-handlebars" id="mbTplSegment">
+            <li class="collection-item avatar">
+                {{#zif "this.type == 'img'"}}
+                <i class="material-icons circle red">image</i>
+                {{/zif}}
+                {{#zif "this.type == 'text'"}}
+                <i class="material-icons circle red">short_text</i>
+                {{/zif}}
+                {{#zif "this.type == 'link'"}}
+                <i class="material-icons circle red">insert_link</i>
+                {{/zif}}
+                <span class="title">{{text}}</span>
+                <p>
+                    {{#zif "this.type == 'img'"}}
+                    <img src="{{src}}" width="40"/>  <br/>
+                    {{/zif}}
+                    {{#zif "this.type == 'link'"}}
+                    {{href}} <br/>
+                    {{/zif}}
+                    {{selector}}
+                </p>
+                <div class="secondary-content">
+                    <input id="{{id}}" type="checkbox" class="segment-check"/>
+                    <label for="{{id}}"></label>
+                </div>
+            </li>
         </script>
         <script type="text/x-handlebars" id="mbTplLink">
             <div class="el-segment" title="{{selector}}">

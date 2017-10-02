@@ -26,6 +26,9 @@
   ],
   "web_accessible_resources": [
     "src/inspectorFrame.html",
-    "css/bootstrap.min.css"
+    "js/jquery/jquery.min.js",
+    "css/bootstrap.min.css",
+    "js/bootstrap.min.js",
+    "fonts/*"
   ]
 }
