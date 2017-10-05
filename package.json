@@ -1,0 +1,24 @@
+{
+  "name": "myboard-extension",
+  "version": "1.0.0",
+  "description": "MyBoard Inspector is chrome extension for extract selector of specific website's contents.",
+  "main": "background.js",
+  "devDependencies": {
+    "@types/jquery": "^2.0.48"
+  },
+  "dependencies": {},
+  "scripts": {
+    "compile": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inha-myboard/myboard-inspector.git"
+  },
+  "author": "bdh92123",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/inha-myboard/myboard-inspector/issues"
+  },
+  "homepage": "https://github.com/inha-myboard/myboard-inspector#readme"
+}

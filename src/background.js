@@ -1,4 +1,3 @@
-var chrome = window["chrome"];
 var MBInspectorInitiator = (function () {
     function MBInspectorInitiator() {
     }
@@ -15,10 +14,8 @@ var MBInspectorInitiator = (function () {
                     }
                 }
                 else {
-                    // Load iniial scripts, css 
                     chrome.tabs.executeScript(tabs[0].id, { file: 'js/jquery/jquery.min.js' });
                     chrome.tabs.executeScript(tabs[0].id, { file: 'js/handlebars.min.js' });
-                    chrome.tabs.executeScript(tabs[0].id, { file: 'js/bootstraps.min.js' });
                     chrome.tabs.executeScript(tabs[0].id, { file: 'js/extends.js' });
                     chrome.tabs.executeScript(tabs[0].id, { file: 'src/inspector.js' });
                     chrome.tabs.insertCSS(tabs[0].id, { file: 'src/inspector.css' });
@@ -43,22 +40,22 @@ var MBInspectorInitiator = (function () {
     };
     return MBInspectorInitiator;
 }());
-var inspector = new MBInspectorInitiator;
-var inspectorContextMenu = chrome.contextMenus.create({ "title": "MyBoard Inspect", contexts: ["all"], "onclick": inspector.inspectThisElement });
+var mbInspectorInitiator = new MBInspectorInitiator;
+var inspectorContextMenu = chrome.contextMenus.create({ "title": "MyBoard Inspect", contexts: ["all"], "onclick": mbInspectorInitiator.inspectThisElement });
 chrome.runtime.onInstalled.addListener(function (details) {
     if (details.reason == "install") {
         chrome.tabs.create({ url: "option.html" });
     }
 });
 chrome.browserAction.onClicked.addListener(function (tab) {
-    inspector.toggle(tab);
+    mbInspectorInitiator.toggle(tab);
 });
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     if (changeInfo.status == "complete") {
         if (tab.url.indexOf("https://chrome.google.com") == 0 || tab.url.indexOf("chrome://") == 0 || tab.url.indexOf("chrome-extension://") == 0) {
             return;
         }
-        //attach context menu on update, keep this outside as plugin may not be loaded before clicking on context menu
         chrome.tabs.executeScript(tab.id, { file: 'resources/contextmenu.js' });
     }
 });
+//# sourceMappingURL=background.js.map

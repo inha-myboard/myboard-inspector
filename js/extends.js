@@ -1,7 +1,7 @@
 jQuery.fn.extend({
     getPath: function(root) {
         var pathes = [];
-        if(root === this) return root[0].tagName;
+        if($(root)[0] === this[0]) return "";
         this.each(function(index, element) {
             var path, $node = jQuery(element);
 
@@ -34,6 +34,17 @@ jQuery.fn.extend({
         });
 
         return pathes.join(',');
+    },
+
+    visibleText: function(trim, joinChar) {
+        return $.map(this.contents(), function(el) {
+            if (el.nodeType === 3) {
+                return trim ? $(el).text().trim() : $(el).text();
+            }
+            if ($(el).is(':visible')) {
+                return $(el).visibleText();
+            }
+        }).join(joinChar ? joinChar : "");
     }
 });
 
@@ -46,7 +57,7 @@ jQuery.expr[':'].hasTextOnly = function(el, i) {
 
 jQuery.expr[':'].hasText = function(el, i) {
     for(var i=0; i<el.childNodes.length; i++) {
-        if(el.childNodes[i].nodeType === 3 && jQuery.trim(el.childNodes[i]).length > 0) {
+        if(el.childNodes[i].nodeType === 3 && jQuery.trim(el.childNodes[i].textContent).length > 0) {
             return true;
         }
     }
@@ -60,6 +71,7 @@ String.prototype.omit = function (maxlength) {
     }
     return this;
 }
+
 
 // for demo: http://jsbin.com/jeqesisa/7/edit
 // for detailed comments, see my SO answer here http://stackoverflow.com/questions/8853396/logical-operator-in-a-handlebars-js-if-conditional/21915381#21915381

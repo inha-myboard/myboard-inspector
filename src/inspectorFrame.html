@@ -69,38 +69,57 @@
             </nav>
             <div class="wizard-wrapper">
                 <div class="static-wizard">
-                    <div>
-                        <h4>Static HTML Inspecting</h4>
-                            <div>
-                                <h5>Body Selector</h5>
-                                <span id="selector"></span>
-                                <input type="checkbox" id="selectSiblingCheck" checked/>
-                                <label for="selectSiblingCheck">형제노드 포함</label>
-                            </div>
-                            <div>
-                                <h5>Segments Selector</h5>
-                                <ul id="contents" class="collection"></ul>
-                            </div>  
+                    <div id="staticStep1">
+                        <div>
+                            <h5>Body Selector</h5>
+                            <span id="selector">Please choose contents to inspect</span>
+                            <br/>
+                            <input type="checkbox" id="selectSiblingCheck" checked/>
+                            <label for="selectSiblingCheck">형제포함</label>
                         </div>
+                        <div>
+                            <h5>Segments Selector</h5>
+                            <ul id="contents" class="collection"></ul>
+                        </div>
+                    </div>
+                    <div id="staticStep2">
+
                     </div>
                 </div>
                 <div class="ajax-wizard">
+                    <div id="ajaxStep1">
+                        <div>
+                            <h5 for="apiUrlText">API URL</h5>
+                            <input type="text" id="apiUrlText" placeholder="http://~/data.json"/>
+                        </div>
+                        <div>
+                            <h5>Document Type</h5>
+                            <input type="radio" id="apiTypeJson" name="apiType" checked/>
+                            <label for="apiTypeJson">JSON</label>
+                        </div>
+                        <div>
+                            <h5 for="apiRootText">Root Json Path (Option)</h5>
+                            <input type="text" id="apiRootText" placeholder="If this is empty, use result as root."/>
+                        </div>
+                    </div>
+                    <div id="ajaxStep2">
+                        Ajax Step2
+                    </div>
                 </div>
             </div>
             <nav class="wizard-step">
                 <div class="nav-wrapper center">
                     <span class="wizard-desc left"></span>
-                    <span class="step">1 of 3</span>
                     <ul id="nav-mobile" class="right">
-                        <li><a id="nextButton" href="#">이전</a></li>
-                        <li><a id="prevButton" href="#">다음</a></li>
+                        <li><a id="prevButton" class="btn-flat " href="#">이전</a></li>
+                        <li><a id="nextButton" class="btn-flat " href="#">다음</a></li>
                     </ul>
                 </div>
             </div>
         </div>
     
         <script type="text/x-handlebars" id="mbTplSegment">
-            <li class="collection-item avatar">
+            <li class="collection-item avatar" data-selector="{{selector}}">
                 {{#zif "this.type == 'img'"}}
                 <i class="material-icons circle red">image</i>
                 {{/zif}}
@@ -110,39 +129,21 @@
                 {{#zif "this.type == 'link'"}}
                 <i class="material-icons circle red">insert_link</i>
                 {{/zif}}
-                <span class="title">{{text}}</span>
+                <span class="title"><pre>{{text}}</pre></span>
                 <p>
                     {{#zif "this.type == 'img'"}}
                     <img src="{{src}}" width="40"/>  <br/>
                     {{/zif}}
                     {{#zif "this.type == 'link'"}}
-                    {{href}} <br/>
+                    Link: {{href}} <br/>
                     {{/zif}}
-                    {{selector}}
+                    Selector: {{selector}}
                 </p>
                 <div class="secondary-content">
                     <input id="{{id}}" type="checkbox" class="segment-check"/>
                     <label for="{{id}}"></label>
                 </div>
             </li>
-        </script>
-        <script type="text/x-handlebars" id="mbTplLink">
-            <div class="el-segment" title="{{selector}}">
-                {{#if href}}
-                <span class="el-name">텍스트</span>
-                <span class="el-value">{{text}}</span>
-                <br/>
-                {{/if}}
-
-                <span class="el-name">링크</span>
-                <span class="el-value"><a href="{{href}}" title="{{href}}" target="_blank">{{omit href 30}}</a></span>
-            </div>
-        </script>
-        <script type="text/x-handlebars" id="mbTplImg">
-            <div class="el-segment" title="{{selector}}">
-                <span class="el-name">이미지</span>
-                <img class="el-value"><img src="{{src}}" width="80"/></span>
-            </div>
         </script>
     </body>
 </html>

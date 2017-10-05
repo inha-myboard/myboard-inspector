@@ -1,4 +1,4 @@
-let chrome = window["chrome"];
+declare var chrome: any;
 
 class MBInspectorInitiator {
     state: any[];
@@ -48,9 +48,9 @@ class MBInspectorInitiator {
     }
 }
 
-let inspector = new MBInspectorInitiator;
+let mbInspectorInitiator = new MBInspectorInitiator;
 
-var inspectorContextMenu = chrome.contextMenus.create({"title": "MyBoard Inspect", contexts: ["all"], "onclick": inspector.inspectThisElement});
+var inspectorContextMenu = chrome.contextMenus.create({"title": "MyBoard Inspect", contexts: ["all"], "onclick": mbInspectorInitiator.inspectThisElement});
 
 chrome.runtime.onInstalled.addListener(function (details) {
     if (details.reason == "install") {
@@ -59,7 +59,7 @@ chrome.runtime.onInstalled.addListener(function (details) {
 });
 
 chrome.browserAction.onClicked.addListener(function (tab) {
-    inspector.toggle(tab);
+    mbInspectorInitiator.toggle(tab);
 });
 
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {

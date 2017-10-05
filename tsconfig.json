@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "module": "es2015",
+        "noImplicitAny": false,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "lib": [
+        	"dom",
+        	"es2015",
+        	"es2015.iterable"
+        ]
+    }
+}
