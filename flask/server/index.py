@@ -1,9 +1,21 @@
-import json
+#2017.10.05
+#merge main.py, googleLogin.py
+
+#flask
 import flask
+from flask import Flask, render_template, request
+from flask.ext.mysql import MySQL
+
+#google oauth2
+import json
+import uuid
 import httplib2
 from apiclient import discovery
 from oauth2client import client
+
 app = flask.Flask(__name__)
+mysql = MySQL()
+
 @app.route('/')
 def index():
   if 'credentials' not in flask.session:
@@ -31,10 +43,26 @@ def oauth2callback():
     auth_code = flask.request.args.get('code')
     credentials = flow.step2_exchange(auth_code)
     flask.session['credentials'] = credentials.to_json()
-    return(flask.redirect(flask.url_for('index')))
+    #return(flask.redirect(flask.url_for('index')))
+    return(flask.redirect(flask.url_for('dashboard')))
+
+@app.route('/dashboard')
+def dashboard():
+	return(render_template('dashboard.html'))
+
+@app.route('/<name>')
+def test(name = None):
+	return(render_template(name+'.html'))
 
 if __name__ == '__main__':
-  import uuid
-  app.secret_key = str(uuid.uuid4())
-  app.debug = False
-  app.run()
+	#MySQL configurations
+	app.config['MYSQL_DATABASE_USER'] = 'root'
+	app.config['MYSQL_DATABASE_PASSWORD'] = '1234'
+	app.config['MYSQL_DATABASE_DB'] = 'mydb'
+	app.config['MYSQL_DATABASE_HOST'] = '127.0.0.1'
+	mysql.init_app(app)
+	mysql.connect()
+	
+	app.secret_key = str(uuid.uuid4())
+	app.debug = False
+	app.run()
