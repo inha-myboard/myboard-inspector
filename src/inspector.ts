@@ -140,9 +140,69 @@ class MBInspector {
 			alert("한개이상 선택해주세요.")
 			return false;
 		}
+
 		let segmentsJson = this.getSegmentsJson(this.inspectedElement, $(this.selectedSegments.join(",")).toArray());
-		$(element).text(JSON.stringify(segmentsJson));
+
+		let segmentHtmls = [];
+		$(segmentsJson).each((i, seg)=>{
+			segmentHtmls.push(this["mbTplSegmentConfig"](seg));
+		});
+
+		$frame("#segmentsConfigList").html(segmentHtmls);
 		return true;
+	}
+
+	onStaticStep3(element) {
+		let fail = false;
+		$frame(".segment-name").each((i, e)=>{
+			let segmentName = $(e).val();
+			if(segmentName.match(/^\d/)) {
+				alert("Don't start with number.");
+				fail = true;
+				return false;
+			} else if(!segmentName) {
+				alert("Name must not be empty.");
+				fail = true;
+				return false;
+			}
+		});
+		if(fail)
+			return false;
+		let includeSibling = $frame("#selectSiblingCheck").is(":checked");
+		let bodySelector = this.inspectedSelector;
+		if(includeSibling) {
+			bodySelector = bodySelector.substring(0, bodySelector.lastIndexOf(":nth"));
+		}
+
+		let items = $(bodySelector);
+		let segmentsConfigJson = $frame(".segment-config").map((i, e)=>{
+			let li = $(e);
+			let selector = li.data("selector");
+			let id = li.data("id");
+			let type = li.data("type");
+			let segmentName = $("#" + id + "name", e);
+			return {
+				"id": id,
+				"selector": selector,
+				"type": type,
+				"name": segmentName
+			};
+		});
+
+		$(items).each((i, e)=> {
+			$(segmentsConfigJson).each((j, f)=> {
+				
+			});	
+		});
+
+		let segmentHtmls = [];
+		$(segmentsConfigJson).each((i, seg)=>{
+			segmentHtmls.push(this["mbTplSegmentConfig"](seg));
+		});
+
+		$frame("#segmentsTestList").html(segmentHtmls);
+
+		this["mbTplSegmentTest"]();
 	}
 
 	goStep(inspectType, stepNumber) {
@@ -177,8 +237,8 @@ class MBInspector {
 	// Inspect specific element that can be selected by 'targetSelector'
 	inspectElements(element) {
 		if(!element) {
-			$frame("#selector").html("");
-			$frame("#contents").html("");
+			$frame("#bodySelector").html("");
+			$frame("#segmentsSelectList").html("");
 			this.inspectedElement = null;
 			this.selectedSegments = null;
 			this.inspectedSelector = null;
@@ -201,7 +261,7 @@ class MBInspector {
 				$("<span></span>").text(">").appendTo(pathNav);
 			$("<a href='#' class='path-crumbs'></a>").text(path).data("paths", paths).appendTo(pathNav);
 		});
-		$frame("#selector").html(pathNav);
+		$frame("#bodySelector").html(pathNav);
 
 		// Find elements that can be segments.
 		let segments = this.findSegments(element);
@@ -211,7 +271,7 @@ class MBInspector {
 		$(segments).each((i, seg)=>{
 			segmentHtmls.push(this["mbTplSegment"](seg));
 		});
-		$frame("#contents").html(segmentHtmls.join(""));
+		$frame("#segmentsSelectList").html(segmentHtmls.join(""));
 
 		if(hasSibling) {
 			$frame("#selectSiblingCheck").attr("checked", "checked");
@@ -264,7 +324,7 @@ class MBInspector {
 			}
 
 			segment["id"] = "segment" + i;
-			segment["text"] = $(e).visibleText(true, "\n");
+			segment["text"] = $(e).visibleText(true, "\n").trim();
 			segment["selector"] = $(e).getPath(element);
 
 			return segment;

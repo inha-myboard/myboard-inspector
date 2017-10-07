@@ -72,18 +72,22 @@
                     <div id="staticStep1">
                         <div>
                             <h5>Body Selector</h5>
-                            <span id="selector">Please choose contents to inspect</span>
+                            <span id="bodySelector">Please choose contents to inspect</span>
                             <br/>
                             <input type="checkbox" id="selectSiblingCheck" checked/>
                             <label for="selectSiblingCheck">형제포함</label>
                         </div>
                         <div>
                             <h5>Segments Selector</h5>
-                            <ul id="contents" class="collection"></ul>
+                            <ul id="segmentsSelectList" class="collection"></ul>
                         </div>
                     </div>
                     <div id="staticStep2">
-
+                        <h5>Fill the name of segments. This will be used your API.</h5>
+                        <ul id="segmentsConfigList" class="collection"></ul>
+                    </div>
+                    <div id="staticStep3">
+                        Test API
                     </div>
                 </div>
                 <div class="ajax-wizard">
@@ -119,7 +123,7 @@
         </div>
     
         <script type="text/x-handlebars" id="mbTplSegment">
-            <li class="collection-item avatar" data-selector="{{selector}}">
+            <li class="collection-item avatar" data-id="{{id}}" data-selector="{{selector}}">
                 {{#zif "this.type == 'img'"}}
                 <i class="material-icons circle red">image</i>
                 {{/zif}}
@@ -140,9 +144,50 @@
                     Selector: {{selector}}
                 </p>
                 <div class="secondary-content">
-                    <input id="{{id}}" type="checkbox" class="segment-check"/>
-                    <label for="{{id}}"></label>
+                    <input id="{{id}}select" type="checkbox" class="segment-check"/>
+                    <label for="{{id}}select"></label>
                 </div>
+            </li>
+        </script>
+
+        <script type="text/x-handlebars" id="mbTplSegmentConfig">
+            <li class="collection-item avatar segment-config" data-id="{{id}}" data-selector="{{selector}}" data-type="{{type}}">
+                {{#zif "this.type == 'img'"}}
+                <i class="material-icons circle red">image</i>
+                {{/zif}}
+                {{#zif "this.type == 'text'"}}
+                <i class="material-icons circle red">short_text</i>
+                {{/zif}}
+                {{#zif "this.type == 'link'"}}
+                <i class="material-icons circle red">insert_link</i>
+                {{/zif}}
+                <span class="title"><pre>{{text}}</pre></span>
+                <p>
+                    {{#zif "this.type == 'img'"}}
+                    <img src="{{src}}" width="40"/>  <br/>
+                    {{/zif}}
+                    {{#zif "this.type == 'link'"}}
+                    Link: {{href}} <br/>
+                    {{/zif}}
+                    Selector: {{selector}} <br/>
+                    <h5>Name</h5>
+                    <input id="{{id}}name" class="segment-name" type="text" value="{{id}}"/>
+                </p>
+            </li>
+        </script>
+        <script type="text/x-handlebars" id="mbTplSegmentTest">
+            <li class="collection-item avatar segment-config" data-id="{{id}}" data-selector="{{selector}}" data-type="{{type}}">
+                {{#each item}}
+                    <h5>{{name}}</h5>
+                    <p>
+                        {{#zif "this.type == 'img'"}}
+                        <img src="{{src}}" width="40"/>  <br/>
+                        {{/zif}}
+                        {{#zif "this.type == 'link'"}}
+                        Link: {{href}} <br/>
+                        {{/zif}}
+                    </p>
+                {{/each}}
             </li>
         </script>
     </body>

@@ -1,21 +1,12 @@
-// chrome.extension.sendMessage({}, function(response) {
-// var readyStateCheckInterval = setInterval(function() {
-// if (document.readyState === "complete") {
-// 	clearInterval(readyStateCheckInterval);
 var MBInspector = (function () {
     function MBInspector() {
-        // Element's selector that can be inspected.
         this.targetSelector = "div,li,tr,a";
-        // inspectType
         this.inspectType = "static";
-        // step number
         this.stepNumber = 1;
     }
-    // Is Initialized
     MBInspector.prototype.isInit = function () {
         return $("#mbInspector").size() > 0;
     };
-    // Initialize inspector
     MBInspector.prototype.init = function () {
         var _this = this;
         this.inspector = $("<div id='mbInspector' style='left: 15px'><iframe id='mbInspectorFrame'><body></body></iframe></div>");
@@ -33,11 +24,9 @@ var MBInspector = (function () {
             _this.enable();
         });
     };
-    // Is enabled (showing) ?
     MBInspector.prototype.isEnable = function () {
         return this.inspector.is(":visible");
     };
-    // Toggle inspector
     MBInspector.prototype.toggle = function () {
         if (!this.isInit()) {
             this.init();
@@ -50,13 +39,11 @@ var MBInspector = (function () {
             this.enable();
         }
     };
-    // Hide inspector & unbind events
     MBInspector.prototype.disable = function () {
         this.unbindEvents();
         this.inspector.hide();
         this.inspectedCover.hide();
     };
-    // When elements is clicked
     MBInspector.prototype.onClickTarget = function (event) {
         console.log(arguments);
         event.preventDefault();
@@ -64,7 +51,6 @@ var MBInspector = (function () {
         var target = $(event.currentTarget);
         this.inspectElements(target);
     };
-    // When one of selectors in path is clicked
     MBInspector.prototype.onClickPathCrumb = function (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -72,14 +58,12 @@ var MBInspector = (function () {
         this.inspectElements($(paths));
         return false;
     };
-    // When element is focused in pointer
     MBInspector.prototype.onMouseOverTarget = function (e) {
         if (e.currentTarget.id == "mbInspector")
             return;
         e.stopPropagation();
         $(e.currentTarget).addClass("mb-inspector-over");
     };
-    // When element lost focus of pointer
     MBInspector.prototype.onMouseOutTarget = function (e) {
         if (e.currentTarget.id == "mbInspector")
             return;
@@ -99,13 +83,50 @@ var MBInspector = (function () {
         return false;
     };
     MBInspector.prototype.onStaticStep2 = function (element) {
+        var _this = this;
         if (!this.selectedSegments || this.selectedSegments.length == 0) {
             alert("한개이상 선택해주세요.");
             return false;
         }
         var segmentsJson = this.getSegmentsJson(this.inspectedElement, $(this.selectedSegments.join(",")).toArray());
-        $(element).text(JSON.stringify(segmentsJson));
+        var segmentHtmls = [];
+        $(segmentsJson).each(function (i, seg) {
+            segmentHtmls.push(_this["mbTplSegmentConfig"](seg));
+        });
+        $frame("#segmentsConfigList").html(segmentHtmls);
         return true;
+    };
+    MBInspector.prototype.onStaticStep3 = function (element) {
+        var fail = false;
+        $frame(".segment-name").each(function (i, e) {
+            var segmentName = $(e).val();
+            if (segmentName.match(/^\d/)) {
+                alert("Don't start with number.");
+                fail = true;
+                return false;
+            }
+            else if (!segmentName) {
+                alert("Name must not be empty.");
+                fail = true;
+                return false;
+            }
+        });
+        if (fail)
+            return false;
+        var segmentsConfigJson = {};
+        $frame(".segment-config").map(function (i, e) {
+            var li = $(e);
+            var selector = li.data("selector");
+            var id = li.data("id");
+            var type = li.data("type");
+            var segmentName = $("#" + id + "name", e);
+            return {
+                "id": id,
+                "selector": selector,
+                "type": type,
+                "name": segmentName
+            };
+        });
     };
     MBInspector.prototype.goStep = function (inspectType, stepNumber) {
         var event = this["on" + inspectType.replace(/(^.?)/g, function (match, chr) { return chr.toUpperCase(); }) + "Step" + stepNumber];
@@ -134,23 +155,20 @@ var MBInspector = (function () {
         wizard.find("> div").hide();
         $frame("#" + inspectType + "Step" + stepNumber).show();
     };
-    // Inspect specific element that can be selected by 'targetSelector'
     MBInspector.prototype.inspectElements = function (element) {
         var _this = this;
         if (!element) {
-            $frame("#selector").html("");
-            $frame("#contents").html("");
+            $frame("#bodySelector").html("");
+            $frame("#segmentsSelectList").html("");
             this.inspectedElement = null;
             this.selectedSegments = null;
             this.inspectedSelector = null;
             return;
         }
-        // get selector
         var selector = element.getPath();
         this.inspectedElement = element;
         this.selectedSegments = null;
         this.inspectedSelector = selector;
-        // Make paths crumb 
         var paths = "";
         var pathNav = $("<div class='path-nav'></div>");
         var selectors = selector.split(">");
@@ -161,15 +179,13 @@ var MBInspector = (function () {
                 $("<span></span>").text(">").appendTo(pathNav);
             $("<a href='#' class='path-crumbs'></a>").text(path).data("paths", paths).appendTo(pathNav);
         });
-        $frame("#selector").html(pathNav);
-        // Find elements that can be segments.
+        $frame("#bodySelector").html(pathNav);
         var segments = this.findSegments(element);
-        // Make segments list
         var segmentHtmls = [];
         $(segments).each(function (i, seg) {
             segmentHtmls.push(_this["mbTplSegment"](seg));
         });
-        $frame("#contents").html(segmentHtmls.join(""));
+        $frame("#segmentsSelectList").html(segmentHtmls.join(""));
         if (hasSibling) {
             $frame("#selectSiblingCheck").attr("checked", "checked");
             $frame("#selectSiblingCheck").attr("disabled", null);
@@ -178,14 +194,12 @@ var MBInspector = (function () {
             $frame("#selectSiblingCheck").attr("checked", null);
             $frame("#selectSiblingCheck").attr("disabled", "disabled");
         }
-        // Highlight inspected element.
         this.inspectedCover.css("top", element.offset().top);
         this.inspectedCover.css("left", element.offset().left);
         this.inspectedCover.css("width", element[0].offsetWidth);
         this.inspectedCover.css("height", element[0].offsetHeight);
         this.inspectedCover.show();
     };
-    // Find segments in element. result is json.
     MBInspector.prototype.findSegments = function (element) {
         var segments = [];
         if (element.is(":hasTextOnly")) {
@@ -207,11 +221,6 @@ var MBInspector = (function () {
                 segment["href"] = e.href;
             }
             else if (e.tagName === "IMG") {
-                // let linkAnchor = $(e).parents("a");
-                // let href = "";
-                // if(linkAnchor.size() > 0) {
-                // 	href = linkAnchor[0].href;
-                // }
                 segment["type"] = "img";
                 segment["src"] = e.src;
             }
@@ -219,19 +228,17 @@ var MBInspector = (function () {
                 segment["type"] = "text";
             }
             segment["id"] = "segment" + i;
-            segment["text"] = $(e).visibleText(true, "\n");
+            segment["text"] = $(e).visibleText(true, "\n").trim();
             segment["selector"] = $(e).getPath(element);
             return segment;
         });
     };
-    // Enable inspector and show
     MBInspector.prototype.enable = function () {
         this.inspector.show();
         this.inspectElements(null);
         this.goStep(this.inspectType, 1);
         this.bindEvents();
     };
-    // Bind events to elements can be target
     MBInspector.prototype.bindEvents = function () {
         var _this = this;
         $("body").on("click", this.targetSelector, $.proxy(this.onClickTarget, this));
@@ -272,7 +279,6 @@ var MBInspector = (function () {
         $frame("body").on("click", "#prevButton", $.proxy(this.onClickPrev, this));
         $frame("body").on("click", "#closeButton", $.proxy(function (e) { MBInspectorToggle(); return false; }, this));
     };
-    // Unbind all events
     MBInspector.prototype.unbindEvents = function () {
         $("body").off("click", this.targetSelector, this.onClickTarget);
         $("body").off("mouseover", this.targetSelector, this.onMouseOverTarget);
@@ -285,24 +291,21 @@ var MBInspector = (function () {
     };
     return MBInspector;
 }());
-// Ajax to extension's resource
 function LoadResource(e, t) {
     var r = new XMLHttpRequest;
     r.open("GET", chrome.runtime.getURL(e), !0), r.onreadystatechange = function () {
         r.readyState == XMLHttpRequest.DONE && 200 == r.status && t(r.responseText);
     }, r.send();
 }
-// Construct inspector instance
 var mbInspector = new MBInspector;
 function $frame(selector) {
     return mbInspector.inspectorFrame.contents().find(selector);
 }
-// Wrapped function to toggle inspector
 function MBInspectorToggle() {
     mbInspector.toggle();
 }
-// Send message that inspector script is loaded to background
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.message == "ping")
         sendResponse({ message: "pong" });
 });
+//# sourceMappingURL=inspector.js.map
