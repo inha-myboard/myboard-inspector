@@ -15,6 +15,12 @@
 declare var $: any;
 declare var chrome: any;
 declare var Handlebars: any;
+declare var document: Document;
+
+enum InspectType {
+	STATIC = "static",
+	AJAX = "ajax"
+};
 
 class MBInspector {
 	// Inspector DIV
@@ -27,17 +33,21 @@ class MBInspector {
 	targetSelector: string = "div,li,tr,a";
 
 	// inspectType
-	inspectType: string = "static";
+	inspectType: InspectType = InspectType.STATIC;
 	// step number
 	stepNumber: number = 1;
+	// currentWizardElement
+	currentWizardElement: any;
 
-	/* Static Inspect Step 1 */
 	// Current inspected element
 	inspectedElement: any;
 	// Current inspected element
 	inspectedSelector: any;
 	// Selected segments from inspected element
 	selectedSegments: any;
+
+	// Ajax Config
+	apiAjaxConfig: any;
 
 
 	// Is Initialized
@@ -124,7 +134,13 @@ class MBInspector {
 	onClickNext(e) {
 		e.preventDefault();
 		e.stopPropagation();
-		this.goStep(this.inspectType, this.stepNumber + 1);
+		if($(e.currentTarget).is(".copy")) {
+			$(this.currentWizardElement).find(".api-json").select();
+			this.inspectorFrame.contents()[0].execCommand('copy');
+    		$frame(".wizard-desc").text("Copied !");
+		} else {
+			this.goStep(this.inspectType, this.stepNumber + 1);
+		}
 		return false;
 	}
 
@@ -135,12 +151,17 @@ class MBInspector {
 		return false;
 	}
 
+	onStaticStep1(element) {
+		$frame(".wizard-desc").text($frame(".segment-check:checked").size() + " Selected");
+	}
+
 	onStaticStep2(element) {
 		if(!this.selectedSegments || this.selectedSegments.length == 0) {
-			alert("한개이상 선택해주세요.")
+			alert("Select segments you want!");
 			return false;
 		}
 
+		$frame(".wizard-desc").text("");
 		let segmentsJson = this.getSegmentsJson(this.inspectedElement, $(this.selectedSegments.join(",")).toArray());
 
 		let segmentHtmls = [];
@@ -175,40 +196,109 @@ class MBInspector {
 		}
 
 		let items = $(bodySelector);
-		let segmentsConfigJson = $frame(".segment-config").map((i, e)=>{
-			let li = $(e);
-			let selector = li.data("selector");
-			let id = li.data("id");
-			let type = li.data("type");
-			let segmentName = $("#" + id + "name", e);
-			return {
-				"id": id,
-				"selector": selector,
-				"type": type,
-				"name": segmentName
-			};
-		});
+		let segmentsTestJson = $(items).toArray().map((item, i)=> {
+			return $frame(".segment-config").map((j, e)=>{
+				let li = $(e);
+				let selector = li.data("selector");
+				let segment = selector == "" ? $(item) : $(item).find(selector);
+				let id = li.data("id");
+				let type = li.data("type");
+				let segmentName = $frame("#" + id + "name").val();
+				let text =  $(segment).visibleText(true, "\n").trim();
+				let testSegment = {
+					"id": id,
+					"selector": selector,
+					"type": type,
+					"name": segmentName
+				};
 
-		$(items).each((i, e)=> {
-			$(segmentsConfigJson).each((j, f)=> {
-				
-			});	
+				if(type == "img") {
+					return $.extend(testSegment, {
+						"src": segment[0].src
+					});
+				} else if(type == "link") {
+					return $.extend(testSegment, {
+						"href": segment[0].href,
+						"text": text
+					});
+				} else if(type == "text") {
+					return $.extend(testSegment, {
+						"text": text
+					});
+				}
+			}).toArray();
 		});
 
 		let segmentHtmls = [];
-		$(segmentsConfigJson).each((i, seg)=>{
-			segmentHtmls.push(this["mbTplSegmentConfig"](seg));
+		$(segmentsTestJson).each((i, seg)=>{
+			segmentHtmls.push(this["mbTplSegmentTest"]({
+				"index": i + 1,
+				"segments": seg
+			}));
 		});
 
+		$frame(".wizard-desc").text(segmentsTestJson.length + " Item Found.");
 		$frame("#segmentsTestList").html(segmentHtmls);
-
-		this["mbTplSegmentTest"]();
 	}
 
-	goStep(inspectType, stepNumber) {
+	onStaticStep4(element) {
+		let bodySelector = this.inspectedSelector;
+		let includeSibling = $frame("#selectSiblingCheck").is(":checked");
+		if(includeSibling) {
+			bodySelector = bodySelector.substring(0, bodySelector.lastIndexOf(":nth"));
+		}
+
+		let segmentsConfig = $frame(".segment-config").map((i, e)=>{
+			let li = $(e);
+			let id = li.data("id");
+			let selector = li.data("selector");
+			let segmentName = $frame("#" + id + "name").val();
+
+			return {
+				"selector": selector,
+				"name": segmentName
+			};
+		}).toArray();
+
+		let apiJson = {
+			"type": "static",
+			"body_selector": bodySelector,
+			"segments" : segmentsConfig
+		};
+		$frame(".wizard-desc").text("");
+		$(element).find(".api-json").val(JSON.stringify(apiJson));
+	}
+
+	onAjaxStep1(element) {
+		$frame(".wizard-desc").text("");
+	}
+
+	onAjaxStep2(element) {
+		let apiUrl = $frame("#apiUrlText").val();
+		let dataType = $frame("[name=dataType]").val();
+		let jsonRoot = $frame("#jsonRootText").val();
+
+		if(!(apiUrl.startsWith("http://") || apiUrl.startsWith("https://"))) {
+			alert("API URL muse be start with 'http://' or 'https://'");
+			return false;
+		}
+		
+		this.apiAjaxConfig = {
+			"url": apiUrl,
+			"type": "ajax",
+			"data_type": dataType,
+			"json_root": jsonRoot
+		};
+
+		$frame(".wizard-desc").text("");
+		$(element).find(".api-json").val(JSON.stringify(this.apiAjaxConfig));	
+	}
+
+	goStep(inspectType: InspectType, stepNumber: number) {
+		this.currentWizardElement = $frame("#" + inspectType + "Step" + stepNumber);
 		let event = this["on" + inspectType.replace(/(^.?)/g, function(match, chr){return chr.toUpperCase();}) + "Step" + stepNumber];
 		if(event) {
-			let result = event.apply(this, $frame("#" + inspectType + "Step" + stepNumber));
+			let result = event.apply(this, this.currentWizardElement);
 			if(result == false)
 				return;
 		}
@@ -216,15 +306,16 @@ class MBInspector {
 		this.inspectType = inspectType;
 		this.stepNumber = stepNumber;
 
+		$frame("#nextButton").removeClass("copy");
+
 		if(stepNumber == 1) {
 			$frame("#prevButton").addClass("disabled");
 			$frame("#nextButton").removeClass("disabled");
 		} else if($frame("#" + inspectType + "Step" + (stepNumber+1)).size() == 0) {
 			$frame("#prevButton").removeClass("disabled");
-			$frame("#nextButton").addClass("disabled");
+			$frame("#nextButton").addClass("copy");
 		} else {
 			$frame("#prevButton").removeClass("disabled");
-			$frame("#nextButton").removeClass("disabled");
 		}
 
 		$frame(".wizard-wrapper > div").hide();
@@ -294,9 +385,9 @@ class MBInspector {
 	findSegments(element) {
 		let segments:Array<any> = [];
 		if(element.is(":hasTextOnly")) {
-			segments = element;
+			segments.push($(element)[0]);
 		} else {
-			segments.push(element);
+			segments.push($(element)[0]);
 			segments = segments.concat(element.find(":hasText:not(a),a[href!='#'],img").filter((i, e)=>{
 				return $(e).is(":visible");
 			}).toArray());
@@ -372,9 +463,9 @@ class MBInspector {
 		});
 		$frame("body").on("change", "#inspectTypeCheck", (e)=>{
 			if($(e.currentTarget).is(":checked")) {
-				this.goStep("ajax", 1);
+				this.goStep(InspectType.AJAX, 1);
 			} else {
-				this.goStep("static", 1);
+				this.goStep(InspectType.STATIC, 1);
 			}
 		});
 		$frame("body").on("click", "#nextButton", $.proxy(this.onClickNext, this));

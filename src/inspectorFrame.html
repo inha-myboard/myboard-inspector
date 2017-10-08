@@ -45,6 +45,18 @@
                 margin-left: 10px;
             }
 
+            .collection-item i {
+                vertical-align: middle;
+            }
+
+            .nowrap {
+                white-space: nowrap;
+            }
+
+            #nextButton.copy {
+                content: "Copy !"
+            }
+
         </style>
         <!-- Compiled and minified JavaScript -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
@@ -53,7 +65,7 @@
         <div id="mbInspectorPanel">
             <nav id="mbInspectorHeader">
                 <div class="nav-wrapper">
-                    <span class="brand-logo center">Inspector</span>
+                    <span class="brand-logo center">MyBoard Inspector</span>
                     <div class="switch left">
                         <label>
                             Static
@@ -75,7 +87,7 @@
                             <span id="bodySelector">Please choose contents to inspect</span>
                             <br/>
                             <input type="checkbox" id="selectSiblingCheck" checked/>
-                            <label for="selectSiblingCheck">형제포함</label>
+                            <label for="selectSiblingCheck">Include Siblings</label>
                         </div>
                         <div>
                             <h5>Segments Selector</h5>
@@ -87,7 +99,15 @@
                         <ul id="segmentsConfigList" class="collection"></ul>
                     </div>
                     <div id="staticStep3">
-                        Test API
+                        If following result is intended, go next.
+                        <ul id="segmentsTestList" class="collection"></ul>
+                    </div>
+                    <div id="staticStep4">
+                        Copy your result to Myboard Register Dialog then register this as your API.
+                        <div>
+                            <label for="apiJsonText">API Result</label>
+                            <textarea id="apiJsonText" class="materialize-textarea api-json"></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="ajax-wizard">
@@ -98,16 +118,20 @@
                         </div>
                         <div>
                             <h5>Document Type</h5>
-                            <input type="radio" id="apiTypeJson" name="apiType" checked/>
-                            <label for="apiTypeJson">JSON</label>
+                            <input type="radio" id="dataTypeJson" name="dataType" value="json" checked/>
+                            <label for="dataTypeJson">JSON</label>
                         </div>
                         <div>
-                            <h5 for="apiRootText">Root Json Path (Option)</h5>
-                            <input type="text" id="apiRootText" placeholder="If this is empty, use result as root."/>
+                            <h5 for="jsonRootText">Root Json Path (Option)</h5>
+                            <input type="text" id="jsonRootText" placeholder="If this is empty, use result as root."/>
                         </div>
                     </div>
                     <div id="ajaxStep2">
-                        Ajax Step2
+                        Copy your result to Myboard Register Dialog then register this as your API.
+                        <div>
+                            <label for="apiAjaxJsonText">API Result</label>
+                            <textarea id="apiAjaxJsonText" class="materialize-textarea api-json"></textarea>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -115,8 +139,8 @@
                 <div class="nav-wrapper center">
                     <span class="wizard-desc left"></span>
                     <ul id="nav-mobile" class="right">
-                        <li><a id="prevButton" class="btn-flat " href="#">이전</a></li>
-                        <li><a id="nextButton" class="btn-flat " href="#">다음</a></li>
+                        <li><a id="prevButton" class="btn-flat " href="#">Prev</a></li>
+                        <li><a id="nextButton" class="btn-flat " href="#">Next</a></li>
                     </ul>
                 </div>
             </div>
@@ -133,16 +157,14 @@
                 {{#zif "this.type == 'link'"}}
                 <i class="material-icons circle red">insert_link</i>
                 {{/zif}}
-                <span class="title"><pre>{{text}}</pre></span>
-                <p>
-                    {{#zif "this.type == 'img'"}}
-                    <img src="{{src}}" width="40"/>  <br/>
-                    {{/zif}}
-                    {{#zif "this.type == 'link'"}}
-                    Link: {{href}} <br/>
-                    {{/zif}}
-                    Selector: {{selector}}
-                </p>
+                <span class="title" title="{{text}}"><i class="material-icons">short_text</i>{{omit text 50}}</span> <br/>
+                {{#zif "this.type == 'img'"}}
+                <img src="{{src}}" width="40"/>  <br/>
+                {{/zif}}
+                {{#zif "this.type == 'link'"}}
+                <span class="nowrap" title="{{href}}"><i class="material-icons">insert_link</i> {{omit href 50}} </span> <br/>
+                {{/zif}}
+                <i class="material-icons">chevron_right</i> {{z 'this.selector ? this.selector : "Self"'}}
                 <div class="secondary-content">
                     <input id="{{id}}select" type="checkbox" class="segment-check"/>
                     <label for="{{id}}select"></label>
@@ -161,32 +183,33 @@
                 {{#zif "this.type == 'link'"}}
                 <i class="material-icons circle red">insert_link</i>
                 {{/zif}}
-                <span class="title"><pre>{{text}}</pre></span>
-                <p>
+                <span class="title"><i class="material-icons">short_text</i>{{omit text 50}}</span> <br/>
+                {{#zif "this.type == 'img'"}}
+                <img src="{{src}}" width="40"/>  <br/>
+                {{/zif}}
+                {{#zif "this.type == 'link'"}}
+                <span class="nowrap" title="{{href}}"><i class="material-icons">insert_link</i> {{omit href 50}}</span> <br/>
+                {{/zif}}
+                <i class="material-icons">chevron_right</i> {{z 'this.selector ? this.selector : "Self"'}} <br/>
+                <div class="input-field inline">
+                Name: <input id="{{id}}name" class="segment-name" type="text" value="{{id}}"/>
+                </div>
+            </li>
+        </script>
+        <script type="text/x-handlebars" id="mbTplSegmentTest">
+            <li class="collection-item avatar" data-id="{{id}}" data-selector="{{selector}}" data-type="{{type}}">
+                <i class="circle red">{{index}}</i>
+                {{#each segments}}
+                    <h5>{{name}}</h5>
                     {{#zif "this.type == 'img'"}}
                     <img src="{{src}}" width="40"/>  <br/>
                     {{/zif}}
                     {{#zif "this.type == 'link'"}}
-                    Link: {{href}} <br/>
+                    <span class="nowrap" title="{{href}}"><i class="material-icons">insert_link</i> {{omit href 50}}</span> <br/>
                     {{/zif}}
-                    Selector: {{selector}} <br/>
-                    <h5>Name</h5>
-                    <input id="{{id}}name" class="segment-name" type="text" value="{{id}}"/>
-                </p>
-            </li>
-        </script>
-        <script type="text/x-handlebars" id="mbTplSegmentTest">
-            <li class="collection-item avatar segment-config" data-id="{{id}}" data-selector="{{selector}}" data-type="{{type}}">
-                {{#each item}}
-                    <h5>{{name}}</h5>
-                    <p>
-                        {{#zif "this.type == 'img'"}}
-                        <img src="{{src}}" width="40"/>  <br/>
-                        {{/zif}}
-                        {{#zif "this.type == 'link'"}}
-                        Link: {{href}} <br/>
-                        {{/zif}}
-                    </p>
+                    {{#if text}}
+                    <span title="{{text}}"><i class="material-icons">short_text</i> {{omit text 50}}</span>
+                    {{/if}}
                 {{/each}}
             </li>
         </script>

@@ -1,7 +1,13 @@
+var InspectType;
+(function (InspectType) {
+    InspectType["STATIC"] = "static";
+    InspectType["AJAX"] = "ajax";
+})(InspectType || (InspectType = {}));
+;
 var MBInspector = (function () {
     function MBInspector() {
         this.targetSelector = "div,li,tr,a";
-        this.inspectType = "static";
+        this.inspectType = InspectType.STATIC;
         this.stepNumber = 1;
     }
     MBInspector.prototype.isInit = function () {
@@ -73,7 +79,14 @@ var MBInspector = (function () {
     MBInspector.prototype.onClickNext = function (e) {
         e.preventDefault();
         e.stopPropagation();
-        this.goStep(this.inspectType, this.stepNumber + 1);
+        if ($(e.currentTarget).is(".copy")) {
+            $(this.currentWizardElement).find(".api-json").select();
+            this.inspectorFrame.contents()[0].execCommand('copy');
+            $frame(".wizard-desc").text("Copied !");
+        }
+        else {
+            this.goStep(this.inspectType, this.stepNumber + 1);
+        }
         return false;
     };
     MBInspector.prototype.onClickPrev = function (e) {
@@ -82,12 +95,16 @@ var MBInspector = (function () {
         this.goStep(this.inspectType, this.stepNumber - 1);
         return false;
     };
+    MBInspector.prototype.onStaticStep1 = function (element) {
+        $frame(".wizard-desc").text($frame(".segment-check:checked").size() + " Selected");
+    };
     MBInspector.prototype.onStaticStep2 = function (element) {
         var _this = this;
         if (!this.selectedSegments || this.selectedSegments.length == 0) {
-            alert("한개이상 선택해주세요.");
+            alert("Select segments you want!");
             return false;
         }
+        $frame(".wizard-desc").text("");
         var segmentsJson = this.getSegmentsJson(this.inspectedElement, $(this.selectedSegments.join(",")).toArray());
         var segmentHtmls = [];
         $(segmentsJson).each(function (i, seg) {
@@ -97,6 +114,7 @@ var MBInspector = (function () {
         return true;
     };
     MBInspector.prototype.onStaticStep3 = function (element) {
+        var _this = this;
         var fail = false;
         $frame(".segment-name").each(function (i, e) {
             var segmentName = $(e).val();
@@ -113,41 +131,120 @@ var MBInspector = (function () {
         });
         if (fail)
             return false;
-        var segmentsConfigJson = {};
-        $frame(".segment-config").map(function (i, e) {
+        var includeSibling = $frame("#selectSiblingCheck").is(":checked");
+        var bodySelector = this.inspectedSelector;
+        if (includeSibling) {
+            bodySelector = bodySelector.substring(0, bodySelector.lastIndexOf(":nth"));
+        }
+        var items = $(bodySelector);
+        var segmentsTestJson = $(items).toArray().map(function (item, i) {
+            return $frame(".segment-config").map(function (j, e) {
+                var li = $(e);
+                var selector = li.data("selector");
+                var segment = selector == "" ? $(item) : $(item).find(selector);
+                var id = li.data("id");
+                var type = li.data("type");
+                var segmentName = $frame("#" + id + "name").val();
+                var text = $(segment).visibleText(true, "\n").trim();
+                var testSegment = {
+                    "id": id,
+                    "selector": selector,
+                    "type": type,
+                    "name": segmentName
+                };
+                if (type == "img") {
+                    return $.extend(testSegment, {
+                        "src": segment[0].src
+                    });
+                }
+                else if (type == "link") {
+                    return $.extend(testSegment, {
+                        "href": segment[0].href,
+                        "text": text
+                    });
+                }
+                else if (type == "text") {
+                    return $.extend(testSegment, {
+                        "text": text
+                    });
+                }
+            }).toArray();
+        });
+        var segmentHtmls = [];
+        $(segmentsTestJson).each(function (i, seg) {
+            segmentHtmls.push(_this["mbTplSegmentTest"]({
+                "index": i + 1,
+                "segments": seg
+            }));
+        });
+        $frame(".wizard-desc").text(segmentsTestJson.length + " Item Found.");
+        $frame("#segmentsTestList").html(segmentHtmls);
+    };
+    MBInspector.prototype.onStaticStep4 = function (element) {
+        var bodySelector = this.inspectedSelector;
+        var includeSibling = $frame("#selectSiblingCheck").is(":checked");
+        if (includeSibling) {
+            bodySelector = bodySelector.substring(0, bodySelector.lastIndexOf(":nth"));
+        }
+        var segmentsConfig = $frame(".segment-config").map(function (i, e) {
             var li = $(e);
-            var selector = li.data("selector");
             var id = li.data("id");
-            var type = li.data("type");
-            var segmentName = $("#" + id + "name", e);
+            var selector = li.data("selector");
+            var segmentName = $frame("#" + id + "name").val();
             return {
-                "id": id,
                 "selector": selector,
-                "type": type,
                 "name": segmentName
             };
-        });
+        }).toArray();
+        var apiJson = {
+            "type": "static",
+            "body_selector": bodySelector,
+            "segments": segmentsConfig
+        };
+        $frame(".wizard-desc").text("");
+        $(element).find(".api-json").val(JSON.stringify(apiJson));
+    };
+    MBInspector.prototype.onAjaxStep1 = function (element) {
+        $frame(".wizard-desc").text("");
+    };
+    MBInspector.prototype.onAjaxStep2 = function (element) {
+        var apiUrl = $frame("#apiUrlText").val();
+        var dataType = $frame("[name=dataType]").val();
+        var jsonRoot = $frame("#jsonRootText").val();
+        if (!(apiUrl.startsWith("http://") || apiUrl.startsWith("https://"))) {
+            alert("API URL muse be start with 'http://' or 'https://'");
+            return false;
+        }
+        this.apiAjaxConfig = {
+            "url": apiUrl,
+            "type": "ajax",
+            "data_type": dataType,
+            "json_root": jsonRoot
+        };
+        $frame(".wizard-desc").text("");
+        $(element).find(".api-json").val(JSON.stringify(this.apiAjaxConfig));
     };
     MBInspector.prototype.goStep = function (inspectType, stepNumber) {
+        this.currentWizardElement = $frame("#" + inspectType + "Step" + stepNumber);
         var event = this["on" + inspectType.replace(/(^.?)/g, function (match, chr) { return chr.toUpperCase(); }) + "Step" + stepNumber];
         if (event) {
-            var result = event.apply(this, $frame("#" + inspectType + "Step" + stepNumber));
+            var result = event.apply(this, this.currentWizardElement);
             if (result == false)
                 return;
         }
         this.inspectType = inspectType;
         this.stepNumber = stepNumber;
+        $frame("#nextButton").removeClass("copy");
         if (stepNumber == 1) {
             $frame("#prevButton").addClass("disabled");
             $frame("#nextButton").removeClass("disabled");
         }
         else if ($frame("#" + inspectType + "Step" + (stepNumber + 1)).size() == 0) {
             $frame("#prevButton").removeClass("disabled");
-            $frame("#nextButton").addClass("disabled");
+            $frame("#nextButton").addClass("copy");
         }
         else {
             $frame("#prevButton").removeClass("disabled");
-            $frame("#nextButton").removeClass("disabled");
         }
         $frame(".wizard-wrapper > div").hide();
         var wizard = $frame("." + inspectType + "-wizard");
@@ -203,10 +300,10 @@ var MBInspector = (function () {
     MBInspector.prototype.findSegments = function (element) {
         var segments = [];
         if (element.is(":hasTextOnly")) {
-            segments = element;
+            segments.push($(element)[0]);
         }
         else {
-            segments.push(element);
+            segments.push($(element)[0]);
             segments = segments.concat(element.find(":hasText:not(a),a[href!='#'],img").filter(function (i, e) {
                 return $(e).is(":visible");
             }).toArray());
@@ -269,10 +366,10 @@ var MBInspector = (function () {
         });
         $frame("body").on("change", "#inspectTypeCheck", function (e) {
             if ($(e.currentTarget).is(":checked")) {
-                _this.goStep("ajax", 1);
+                _this.goStep(InspectType.AJAX, 1);
             }
             else {
-                _this.goStep("static", 1);
+                _this.goStep(InspectType.STATIC, 1);
             }
         });
         $frame("body").on("click", "#nextButton", $.proxy(this.onClickNext, this));
