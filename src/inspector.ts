@@ -121,7 +121,9 @@ class MBInspector {
 	onMouseOverTarget(e) {
 		if(e.currentTarget.id == "mbInspector") return;
 		e.stopPropagation();
+		e.preventDefault();
 		$(e.currentTarget).addClass("mb-inspector-over");
+		return true;
 	}
 
 	// When element lost focus of pointer
@@ -200,10 +202,16 @@ class MBInspector {
 			return $frame(".segment-config").map((j, e)=>{
 				let li = $(e);
 				let selector = li.data("selector");
-				let segment = selector == "" ? $(item) : $(item).find(selector);
+				let segment = selector == "" ? $(item) : $(item).find(" > " + selector);
 				let id = li.data("id");
 				let type = li.data("type");
 				let segmentName = $frame("#" + id + "name").val();
+
+				// Invalid segment
+				if(segment.size() == 0) {
+					return false;
+				}
+
 				let text =  $(segment).visibleText(true, "\n").trim();
 				let testSegment = {
 					"id": id,
@@ -227,6 +235,15 @@ class MBInspector {
 					});
 				}
 			}).toArray();
+		}).filter((item)=>{
+			let pass = false;
+			$(item).each((i, segment)=>{
+				if(!segment) {
+					pass = true;
+					return false;
+				}
+			});
+			return !pass;
 		});
 
 		let segmentHtmls = [];
@@ -379,6 +396,8 @@ class MBInspector {
 		this.inspectedCover.css("width", element[0].offsetWidth);
 		this.inspectedCover.css("height", element[0].offsetHeight);
 		this.inspectedCover.show();
+
+		this.goStep(InspectType.STATIC, 1);
 	}
 
 	// Find segments in element. result is json.

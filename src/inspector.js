@@ -68,7 +68,9 @@ var MBInspector = (function () {
         if (e.currentTarget.id == "mbInspector")
             return;
         e.stopPropagation();
+        e.preventDefault();
         $(e.currentTarget).addClass("mb-inspector-over");
+        return true;
     };
     MBInspector.prototype.onMouseOutTarget = function (e) {
         if (e.currentTarget.id == "mbInspector")
@@ -141,10 +143,13 @@ var MBInspector = (function () {
             return $frame(".segment-config").map(function (j, e) {
                 var li = $(e);
                 var selector = li.data("selector");
-                var segment = selector == "" ? $(item) : $(item).find(selector);
+                var segment = selector == "" ? $(item) : $(item).find(" > " + selector);
                 var id = li.data("id");
                 var type = li.data("type");
                 var segmentName = $frame("#" + id + "name").val();
+                if (segment.size() == 0) {
+                    return false;
+                }
                 var text = $(segment).visibleText(true, "\n").trim();
                 var testSegment = {
                     "id": id,
@@ -169,6 +174,15 @@ var MBInspector = (function () {
                     });
                 }
             }).toArray();
+        }).filter(function (item) {
+            var pass = false;
+            $(item).each(function (i, segment) {
+                if (!segment) {
+                    pass = true;
+                    return false;
+                }
+            });
+            return !pass;
         });
         var segmentHtmls = [];
         $(segmentsTestJson).each(function (i, seg) {
@@ -296,6 +310,7 @@ var MBInspector = (function () {
         this.inspectedCover.css("width", element[0].offsetWidth);
         this.inspectedCover.css("height", element[0].offsetHeight);
         this.inspectedCover.show();
+        this.goStep(InspectType.STATIC, 1);
     };
     MBInspector.prototype.findSegments = function (element) {
         var segments = [];
