@@ -276,8 +276,9 @@ class MBInspector {
 				"name": segmentName
 			};
 		}).toArray();
-
+		
 		let apiJson = {
+			"url": document.location.href,
 			"type": "static",
 			"body_selector": bodySelector,
 			"segments" : segmentsConfig
