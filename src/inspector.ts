@@ -113,6 +113,10 @@ class MBInspector {
 		e.preventDefault();
 		e.stopPropagation();
 		let paths = $(e.currentTarget).data("paths");
+		if(!$(paths).is(":visible")) {
+			alert("This is invisible now. Please select visible element.");
+			return false;
+		}
 		this.inspectElements($(paths));
 		return false;
 	}
@@ -236,14 +240,14 @@ class MBInspector {
 				}
 			}).toArray();
 		}).filter((item)=>{
-			let pass = false;
+			var valid = false;
 			$(item).each((i, segment)=>{
-				if(!segment) {
-					pass = true;
-					return false;
+				if(segment) {
+					valid = true;
+					return true;
 				}
 			});
-			return !pass;
+			return valid;																									
 		});
 
 		let segmentHtmls = [];
@@ -458,16 +462,16 @@ class MBInspector {
 		let r = this.inspector;
 		let n = 0;
 		$frame("body").on("mousedown", "#mbInspectorHeader", function(o) {
-            var i = window.innerWidth - 15,
-                s = r.outerWidth(),
-                a = o.pageX;
-            $frame("body").on("mousemove", function(e) {
-                var t = e.pageX - a,
-                    n = r.offset().left + t;
-                n + s > i && (n = i - s), n < 15 && (n = 15), r.css("left", n)
-            }).on("mouseup", function(n) {
-                $frame("body").off("mousemove").off("mouseup");
-            }), o.preventDefault(), o.stopPropagation();
+		            var i = window.innerWidth - 15,
+		                s = r.outerWidth(),
+		                a = o.pageX;
+		            $frame("body").on("mousemove", function(e) {
+		                var t = e.pageX - a,
+		                    n = r.offset().left + t;
+		                n + s > i && (n = i - s), n < 15 && (n = 15), r.css("left", n)
+		            }).on("mouseup", function(n) {
+		                $frame("body").off("mousemove").off("mouseup");
+		            }), o.preventDefault(), o.stopPropagation();
 		});
 		$frame("body").on("change", ".segment-check", (e)=>{
 			$frame(".wizard-desc").text($frame(".segment-check:checked").size() + " Selected");
@@ -522,6 +526,10 @@ function $frame(selector) {
 // Wrapped function to toggle inspector
 function MBInspectorToggle() {
 	mbInspector.toggle();
+}
+
+function MBInspectThisElement() {
+	console.log(arguments);
 }
 
 // Send message that inspector script is loaded to background

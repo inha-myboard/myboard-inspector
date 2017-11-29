@@ -61,6 +61,10 @@ var MBInspector = (function () {
         e.preventDefault();
         e.stopPropagation();
         var paths = $(e.currentTarget).data("paths");
+        if (!$(paths).is(":visible")) {
+            alert("This is invisible now. Please select visible element.");
+            return false;
+        }
         this.inspectElements($(paths));
         return false;
     };
@@ -175,14 +179,14 @@ var MBInspector = (function () {
                 }
             }).toArray();
         }).filter(function (item) {
-            var pass = false;
+            var valid = false;
             $(item).each(function (i, segment) {
-                if (!segment) {
-                    pass = true;
-                    return false;
+                if (segment) {
+                    valid = true;
+                    return true;
                 }
             });
-            return !pass;
+            return valid;
         });
         var segmentHtmls = [];
         $(segmentsTestJson).each(function (i, seg) {
@@ -415,6 +419,9 @@ function $frame(selector) {
 }
 function MBInspectorToggle() {
     mbInspector.toggle();
+}
+function MBInspectThisElement() {
+    console.log(arguments);
 }
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.message == "ping")
