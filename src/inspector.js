@@ -215,6 +215,7 @@ var MBInspector = (function () {
             };
         }).toArray();
         var apiJson = {
+            "url": document.location.href,
             "type": "static",
             "body_selector": bodySelector,
             "segments": segmentsConfig
